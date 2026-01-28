@@ -25,10 +25,7 @@ DEVSTRIDE_API_SECRET=YOUR_API_SECRET_FROM_1PASSWORD
 ```
 
 **Where to find these values:**
-- **DEVSTRIDE_API_KEY**: Your DevStride API key
 - **DEVSTRIDE_API_SECRET**: Retrieve from 1Password (Mobile vault)
-- **DEVSTRIDE_ORG_ID**: Your DevStride organization ID
-- **DEVSTRIDE_API_BASE**: Usually `https://api.devstride.com`
 
 **Security Note:** The `.env` file is in `.gitignore` and will never be committed to version control. Keep your API secret safe.
 
