@@ -227,3 +227,11 @@ export async function listItems(limit?: number) {
     throw err;
   }
 }
+
+export async function updateItemStatus(itemId: string, status: string) {
+  const laneId = laneToLaneIdMap[status];
+  if (!laneId) {
+    throw new Error(`Unknown status: ${status}. Valid statuses: ${Object.keys(laneToLaneIdMap).join(', ')}`);
+  }
+  return updateItem(itemId, { laneId });
+}

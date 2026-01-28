@@ -6,7 +6,7 @@ import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { createEpicInWorkstream, createStoryInWorkstream, listBoardsAndWorkstreams, listItems, getBoardById, BOARD_IDS } from './devstrideClient';
+import { createEpicInWorkstream, createStoryInWorkstream, listBoardsAndWorkstreams, listItems, getBoardById, BOARD_IDS, updateItemStatus } from './devstrideClient';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -137,6 +137,24 @@ const tools: Tool[] = [
         },
       },
       required: ['title'],
+    },
+  },
+  {
+    name: 'update_item_status',
+    description: 'Update the status/lane of an item (e.g., move to In Progress, Code Review, etc.)',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        itemId: {
+          type: 'string',
+          description: 'Item ID or number (e.g., "I20135")',
+        },
+        status: {
+          type: 'string',
+          description: 'Target status: "Not Started", "In Progress", "QA Review", "Code Review", or "Design Review"',
+        },
+      },
+      required: ['itemId', 'status'],
     },
   },
 ];
@@ -299,6 +317,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
                   priority: result.priority,
                   dueDate: result.dueDate,
                   assignee: result.assignee,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+
+      if (name === 'update_item_status') {
+        const { itemId, status } = args;
+        const result = await updateItemStatus(itemId, status);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  success: true,
+                  id: result.id || result.number,
+                  title: result.title,
+                  status: status,
+                  laneId: result.laneId,
                 },
                 null,
                 2

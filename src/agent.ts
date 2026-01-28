@@ -1,4 +1,4 @@
-import { createEpic, createStory, updateItem, getItem, listBoards, listWorkstreams, createItemInWorkstream } from './devstrideClient';
+import { createEpic, createStory, updateItem, getItem, listBoards, listWorkstreams, createItemInWorkstream, updateItemStatus, laneToLaneIdMap } from './devstrideClient';
 
 function extractQuoted(text: string) {
   const m = text.match(/"([^"]+)"|'([^']+)'/);
@@ -76,6 +76,34 @@ export async function handleNaturalLanguage(input: string) {
     return await createStory(title, description);
   }
 
+  // Update item status (example: "start work on I20135" or "move I20135 to In Progress")
+  if ((/start|begin|move|update/.test(text) && /work|status/.test(text)) || /in progress|code review|qa review|design review|not started/.test(text)) {
+    const idMatch = text.match(/\b(I\d+)\b/i) || text.match(/item\s+(\w[\w-]*)/i);
+    if (idMatch) {
+      const id = idMatch[1];
+      
+      // Try to extract status from common patterns
+      let status: string | null = null;
+      const statuses = Object.keys(laneToLaneIdMap);
+      
+      for (const s of statuses) {
+        if (text.toLowerCase().includes(s.toLowerCase())) {
+          status = s;
+          break;
+        }
+      }
+      
+      // Default to "In Progress" if moving/starting work
+      if (!status && (/start|begin|move|working/.test(text))) {
+        status = 'In Progress';
+      }
+      
+      if (status) {
+        return await updateItemStatus(id, status);
+      }
+    }
+  }
+
   // Update item by id (example: "update item 12345 set title to \"New title\"")
   if (/update/.test(text) && /item/.test(text)) {
     const idMatch = text.match(/item\s+(\w[\w-]*)/i);
@@ -92,6 +120,6 @@ export async function handleNaturalLanguage(input: string) {
 
   // Fallback: echo help
   return {
-    message: 'Could not parse command. Examples: \n - Create epic "My Epic"\n - Create story "User can log in"\n - Update item ITEM_ID set title "New title"'
+    message: 'Could not parse command. Examples: \n - Create epic "My Epic"\n - Create story "User can log in"\n - Start work on I20135\n - Move I20135 to Code Review'
   };
 }
