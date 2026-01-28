@@ -3,8 +3,10 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   Tool,
   TextContent,
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { createEpicInWorkstream, createStoryInWorkstream, listBoardsAndWorkstreams, listItems, getBoardById, BOARD_IDS } from './devstrideClient.js';
+import { createEpicInWorkstream, createStoryInWorkstream, listBoardsAndWorkstreams, listItems, getBoardById, BOARD_IDS } from './devstrideClient';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -15,6 +17,10 @@ let currentBoardId: string | null = null;
 const server = new Server({
   name: 'devstride-mcp',
   version: '1.0.0',
+}, {
+  capabilities: {
+    tools: {},
+  },
 });
 
 // Expose tools
@@ -135,17 +141,12 @@ const tools: Tool[] = [
   },
 ];
 
-server.setRequestHandler(
-  { method: 'tools/list' as const } as any,
-  async () => ({
-    tools,
-  })
-);
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools,
+}));
 
-server.setRequestHandler(
-  { method: 'tools/call' as const } as any,
-  async (request: any) => {
-    const { name, arguments: args } = request.params;
+server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
+  const { name, arguments: args } = request.params;
 
     try {
       if (name === 'set_current_board') {

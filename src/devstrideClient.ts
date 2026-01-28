@@ -26,7 +26,8 @@ const client = axios.create({
 export type ItemType = 'Epic' | 'Story' | 'Task' | 'Bug';
 
 export const BOARD_IDS = {
-  SPRINT_2_Q1_26: '2406aa12-4d39-4e3a-bd34-70f4f9a0c3fc'
+  SPRINT_2_Q1_26: '2406aa12-4d39-4e3a-bd34-70f4f9a0c3fc',
+  SPRINT_3_Q1_26: 'bdb79b38-8b45-4460-bcce-efaa2bd2e562'
 } as const;
 
 // Map item types to their workTypeIds
@@ -66,8 +67,10 @@ export async function createStory(title: string, description?: string) {
 }
 
 export async function updateItem(itemId: string, patch: any) {
-  const res = await client.patch(`/items/${itemId}`, patch);
-  return res.data;
+  // Extract just the number part if it's a full ID
+  const id = itemId.includes(':') ? itemId.split(':')[1] : itemId;
+  const res = await client.patch(`/work-items/${id}`, patch);
+  return res.data?.data || res.data;
 }
 
 export async function getItem(itemId: string) {
