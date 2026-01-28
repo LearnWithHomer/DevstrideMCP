@@ -35,9 +35,70 @@ DEVSTRIDE_API_SECRET=YOUR_API_SECRET_FROM_1PASSWORD
 npm run build
 ```
 
+## VS Code Workspace Setup
+
+To integrate DevstrideMCP with your development workspace for Copilot access, create or update a VS Code workspace file (`.code-workspace`):
+
+### Step 1: Create a Workspace File
+
+Create a file named `workspace.code-workspace` (or use existing workspace):
+
+```json
+{
+  "folders": [
+    { "path": "/path/to/your/project" },
+    { "path": "/path/to/DevstrideMCP" }
+  ],
+  "settings": {
+    "modelcontextprotocol.servers": {
+      "devstride": {
+        "command": "npm",
+        "args": ["run", "mcp"],
+        "cwd": "/path/to/DevstrideMCP"
+      }
+    }
+  }
+}
+```
+
+### Step 2: Update Paths
+
+Replace the paths with your actual directory paths:
+- `/path/to/your/project` - Path to your main project folder
+- `/path/to/DevstrideMCP` - Path to the DevstrideMCP repository
+
+### Step 3: Open the Workspace
+
+In VS Code:
+1. File → Open Workspace from File
+2. Select your `workspace.code-workspace` file
+3. Trust the workspace when prompted
+
+### Step 4: Verify MCP Server
+
+Once the workspace is open:
+1. GitHub Copilot should automatically connect to the DevstrideMCP server
+2. You can now use natural language commands in Copilot to manage DevStride items
+3. Check the MCP logs in the terminal if issues occur
+
+### Example Copilot Commands
+
+Once connected, you can use commands like:
+- "Create an epic named 'Build awesome feature'"
+- "Start work on I20135"
+- "Move I20135 to Code Review"
+- "Set current board to 2406aa12-4d39-4e3a-bd34-70f4f9a0c3fc"
+- "List all workstreams"
+
 ## Running the MCP Server
 
-Start the server on stdio:
+### Via VS Code Workspace (Recommended)
+
+The easiest way is to set up a [VS Code Workspace](#vs-code-workspace-setup) as described above. VS Code and Copilot will automatically start the server.
+
+### Manual Start
+
+To start the server on stdio (for testing or standalone use):
 
 ```bash
 npm run mcp
