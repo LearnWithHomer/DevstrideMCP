@@ -1,0 +1,17 @@
+{
+  "folders": [
+    { "path": "." }
+  ],
+  "settings": {
+    "modelcontextprotocol.servers": {
+      "devstride": {
+        "command": "npm",
+        "args": ["run", "mcp"],
+        "cwd": "/Users/adam/Documents/GitHub/DevstrideMCP"
+      }
+    }
+  },
+  "extensions": {
+    "recommendations": []
+  }
+}
