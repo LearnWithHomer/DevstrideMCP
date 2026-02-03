@@ -235,3 +235,63 @@ export async function updateItemStatus(itemId: string, status: string) {
   }
   return updateItem(itemId, { laneId });
 }
+
+export async function getCurrentSprintBoard(boardFolderId: string) {
+  try {
+    // Fetch all boards in the folder
+    let allBoards: any[] = [];
+    let cursor = null;
+    
+    while (true) {
+      const params: any = { limit: 50 };
+      if (cursor) params.cursor = cursor;
+      
+      const res = await client.get('/boards', { params });
+      const boards = res.data || [];
+      
+      if (Array.isArray(boards)) {
+        allBoards = allBoards.concat(boards);
+      } else if (Array.isArray(res.data?.data)) {
+        allBoards = allBoards.concat(res.data.data);
+      }
+      
+      cursor = res.data?.meta?.cursor;
+      if (!cursor) break;
+    }
+    
+    // Filter by folder and time-based (sprints)
+    const sprints = allBoards.filter(b => b.boardFolderId === boardFolderId && b.timeBased);
+    
+    // Find current sprint
+    const today = new Date();
+    const currentSprint = sprints.find(sprint => {
+      const startDate = new Date(sprint.startDate);
+      const endDate = new Date(sprint.endDate);
+      return today >= startDate && today <= endDate;
+    });
+    
+    return currentSprint || null;
+  } catch (err: any) {
+    console.error('Error fetching current sprint:', err.message);
+    return null;
+  }
+}
+
+export async function getSprintItems(boardId: string) {
+  try {
+    // Query items directly by boardId
+    const itemsRes = await client.get('/items', {
+      params: {
+        itemType: 'workitem',
+        boardId,
+        limit: 100
+      }
+    });
+    
+    const items = itemsRes.data?.data || itemsRes.data || [];
+    return items;
+  } catch (err: any) {
+    console.error('Error fetching sprint items:', err.message);
+    return [];
+  }
+}
