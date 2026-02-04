@@ -6,7 +6,7 @@ import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { createEpicInWorkstream, createStoryInWorkstream, listBoardsAndWorkstreams, listItems, getBoardById, BOARD_IDS, updateItemStatus } from './devstrideClient';
+import { createEpicInWorkstream, createStoryInWorkstream, listBoardsAndWorkstreams, listItems, getBoardById, BOARD_IDS, updateItemStatus, postComment, assignItem } from './devstrideClient';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -155,6 +155,42 @@ const tools: Tool[] = [
         },
       },
       required: ['itemId', 'status'],
+    },
+  },
+  {
+    name: 'post_comment',
+    description: 'Post a comment on a DevStride item.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        itemNumber: {
+          type: 'string',
+          description: 'Item number (e.g., "I20135")',
+        },
+        message: {
+          type: 'string',
+          description: 'Comment message (supports HTML formatting)',
+        },
+      },
+      required: ['itemNumber', 'message'],
+    },
+  },
+  {
+    name: 'assign_item',
+    description: 'Assign a DevStride item to a user.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        itemId: {
+          type: 'string',
+          description: 'Item ID or number (e.g., "I20135")',
+        },
+        assignee: {
+          type: 'string',
+          description: 'Assignee name or username',
+        },
+      },
+      required: ['itemId', 'assignee'],
     },
   },
 ];
@@ -340,6 +376,49 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
                   title: result.title,
                   status: status,
                   laneId: result.laneId,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+
+      if (name === 'post_comment') {
+        const { itemNumber, message } = args;
+        const result = await postComment(itemNumber, message);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  success: true,
+                  itemNumber,
+                  message,
+                  response: result,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+
+      if (name === 'assign_item') {
+        const { itemId, assignee } = args;
+        const result = await assignItem(itemId, assignee);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  success: true,
+                  id: result.id || result.number,
+                  assignee: result.assignee,
                 },
                 null,
                 2

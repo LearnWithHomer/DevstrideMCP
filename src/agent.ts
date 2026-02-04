@@ -1,4 +1,4 @@
-import { createEpic, createStory, updateItem, getItem, listBoards, listWorkstreams, createItemInWorkstream, updateItemStatus, laneToLaneIdMap } from './devstrideClient';
+import { createEpic, createStory, updateItem, getItem, listBoards, listWorkstreams, createItemInWorkstream, updateItemStatus, laneToLaneIdMap, postComment, assignItem } from './devstrideClient';
 
 function extractQuoted(text: string) {
   const m = text.match(/"([^"]+)"|'([^']+)'/);
@@ -77,7 +77,7 @@ export async function handleNaturalLanguage(input: string) {
   }
 
   // Update item status (example: "start work on I20135" or "move I20135 to In Progress")
-  if ((/start|begin|move|update/.test(text) && /work|status/.test(text)) || /in progress|code review|qa review|design review|not started/.test(text)) {
+  if ((/(start|begin|move|update)/i.test(text) && (/(work|status|to)/i.test(text))) || /(in progress|code review|qa review|design review|not started)/i.test(text)) {
     const idMatch = text.match(/\b(I\d+)\b/i) || text.match(/item\s+(\w[\w-]*)/i);
     if (idMatch) {
       const id = idMatch[1];
@@ -118,8 +118,32 @@ export async function handleNaturalLanguage(input: string) {
     }
   }
 
+  // Post comment (example: "Post a comment on I20147 saying 'build 232 is spinning'")
+  if (/(post|add|comment|say)/i.test(text)) {
+    const idMatch = text.match(/\b(I\d+)\b/i);
+    if (idMatch) {
+      const itemNumber = idMatch[1];
+      const message = extractQuoted(text) || extractAfterKeywords(text, ['saying', 'with', 'message', 'saying:']) || text;
+      if (message && message !== text) {
+        return await postComment(itemNumber, message);
+      }
+    }
+  }
+
+  // Assign item (example: "assign I20146 to Nico Cinquegrani")
+  if (/(assign)/i.test(text) && /(to)/i.test(text)) {
+    const idMatch = text.match(/\b(I\d+)\b/i);
+    if (idMatch) {
+      const itemId = idMatch[1];
+      const assignee = extractAfterKeywords(text, ['to']) || extractAfterKeywords(text, ['assign']) || null;
+      if (assignee) {
+        return await assignItem(itemId, assignee);
+      }
+    }
+  }
+
   // Fallback: echo help
   return {
-    message: 'Could not parse command. Examples: \n - Create epic "My Epic"\n - Create story "User can log in"\n - Start work on I20135\n - Move I20135 to Code Review'
+    message: 'Could not parse command. Examples: \n - Create epic "My Epic"\n - Create story "User can log in"\n - Start work on I20135\n - Move I20135 to Code Review\n - Post a comment on I20147 saying "your message"\n - Assign I20146 to Nico Cinquegrani'
   };
 }

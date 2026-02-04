@@ -295,3 +295,16 @@ export async function getSprintItems(boardId: string) {
     return [];
   }
 }
+
+export async function postComment(itemNumber: string, message: string) {
+  const payload = {
+    message: { html: message },
+    itemNumber
+  };
+  const res = await client.post('/item-comments', payload);
+  return res.data;
+}
+
+export async function assignItem(itemId: string, assignee: string) {
+  return updateItem(itemId, { assigneeUsername: assignee });
+}
