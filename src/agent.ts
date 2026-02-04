@@ -1,4 +1,4 @@
-import { createEpic, createStory, updateItem, getItem, listBoards, listWorkstreams, createItemInWorkstream, updateItemStatus, laneToLaneIdMap, postComment, assignItem } from './devstrideClient';
+import { createEpic, createStory, updateItem, getItem, listBoards, listWorkstreams, createItemInWorkstream, updateItemStatus, laneToLaneIdMap, postComment, assignItem, getItemStatus } from './devstrideClient';
 
 function extractQuoted(text: string) {
   const m = text.match(/"([^"]+)"|'([^']+)'/);
@@ -76,6 +76,15 @@ export async function handleNaturalLanguage(input: string) {
     return await createStory(title, description);
   }
 
+  // Get item status (example: "What's the status of I20147?" or "Get I20146")
+  if (/(status|get|what|show)/i.test(text) && /\b(I\d+)\b/i.test(text)) {
+    const idMatch = text.match(/\b(I\d+)\b/i);
+    if (idMatch) {
+      const id = idMatch[1];
+      return await getItemStatus(id);
+    }
+  }
+
   // Update item status (example: "start work on I20135" or "move I20135 to In Progress")
   if ((/(start|begin|move|update)/i.test(text) && (/(work|status|to)/i.test(text))) || /(in progress|code review|qa review|design review|not started)/i.test(text)) {
     const idMatch = text.match(/\b(I\d+)\b/i) || text.match(/item\s+(\w[\w-]*)/i);
@@ -144,6 +153,6 @@ export async function handleNaturalLanguage(input: string) {
 
   // Fallback: echo help
   return {
-    message: 'Could not parse command. Examples: \n - Create epic "My Epic"\n - Create story "User can log in"\n - Start work on I20135\n - Move I20135 to Code Review\n - Post a comment on I20147 saying "your message"\n - Assign I20146 to Nico Cinquegrani'
+    message: 'Could not parse command. Examples: \n - Create epic "My Epic"\n - Create story "User can log in"\n - What is the status of I20147\n - Start work on I20135\n - Move I20135 to Code Review\n - Post a comment on I20147 saying "your message"\n - Assign I20146 to Nico Cinquegrani'
   };
 }

@@ -47,6 +47,11 @@ export const laneToLaneIdMap: Record<string, string> = {
   'Design Review': '57dd8c0d-95de-4d4a-bc08-4a31c0bb7c02'
 } as const;
 
+// Reverse map: laneId to lane labels
+export const laneIdToLaneMap: Record<string, string> = Object.fromEntries(
+  Object.entries(laneToLaneIdMap).map(([label, id]) => [id, label])
+);
+
 export async function createItem(type: ItemType, title: string, description?: string) {
   const payload: any = {
     type,
@@ -76,6 +81,31 @@ export async function updateItem(itemId: string, patch: any) {
 export async function getItem(itemId: string) {
   const res = await client.get(`/items/${itemId}`);
   return res.data;
+}
+
+export async function getItemStatus(itemId: string) {
+  try {
+    const res = await client.get(`/work-items/${itemId}`);
+    const item = res.data?.data || res.data;
+    
+    const status = laneIdToLaneMap[item.laneId] || 'Unknown';
+    
+    return {
+      number: item.number,
+      title: item.title,
+      status,
+      assignee: item.assigneeUsername || 'Unassigned',
+      dueDate: item.dueDate || 'No due date',
+      priority: item.priorityId || 'No priority',
+      commentCount: item.commentCount || 0,
+      lastUpdated: item.dateUpdated
+    };
+  } catch (err: any) {
+    if (err.response?.status === 404) {
+      throw new Error(`Item ${itemId} not found`);
+    }
+    throw err;
+  }
 }
 
 export async function listBoards() {
